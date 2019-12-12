@@ -7,8 +7,8 @@ import pandas as pd
 import urllib.request
 
 def setUpDatabase(db_name):
-    #path = os.path.dirname(os.path.abspath(__file__))
-    conn = sqlite3.connect(db_name)
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path + "/"  + db_name)
     cur = conn.cursor()
     return cur, conn
 cur, conn = setUpDatabase('CandidateData.db')
@@ -47,7 +47,7 @@ from pytrends.request import TrendReq
 pytrends = TrendReq(hl='en-US', tz=360)
 mean = []
 delta = []
-candidate_count = 0;
+candidate_count = 0
 for row in candidates:
   # print("full name: ", row[0])
   name = row[0]
@@ -66,7 +66,13 @@ for row in candidates:
   print('candidate: : ', row[0], " | 1 day  mean: ", df3[row[0]].mean() )
   print('candidate: : ', row[0], " | 7 day mean: ", df4[row[0]].mean() )
   print('candidate: : ', row[0], " | 5 yr mean: ", df5[row[0]].mean() )
-  cur.execute("INSERT INTO Gtrend_MEAN (id, name, onemonth, threemonth, oneday, sevenday, fiveyear) VALUES (?, ?, ? ,?,?, ?, ?)", (candidate_count, name, df[row[0]].mean(), df2[row[0]].mean(), df3[row[0]].mean(), df4[row[0]].mean(), df5[row[0]].mean() ))
+  onemonth=df[row[0]].mean()
+  threemonth= df2[row[0]].mean()
+  oneday= df3[row[0]].mean()
+  sevenday= df4[row[0]].mean() 
+  fiveyear= df5[row[0]].mean()
+  id = candidate_count
+  cur.execute("INSERT INTO Gtrend_MEAN (id, name, onemonth, threemonth, oneday, sevenday, fiveyear) VALUES (?, ?, ? ,?,?, ?, ?)", (id, name, onemonth, threemonth, oneday, sevenday, fiveyear ))
 
   print('candidate: : ', row[0], " | 30 day delta: ", df.iloc[:,0][-1] - df.iloc[:,0][0] )
   print('candidate: : ', row[0], " | 90 day delta: ", df2.iloc[:,0][-1] - df2.iloc[:,0][0])
@@ -79,4 +85,4 @@ for row in candidates:
   #mean.append(df[row[0]].mean())
   # print('delta: ', df.iloc[:,0][-1] - df.iloc[:,0][0])
   #delta.append(df.iloc[:,0][-1] - df.iloc[:,0][0])
-
+conn.commit()
