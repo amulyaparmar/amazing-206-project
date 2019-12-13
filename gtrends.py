@@ -79,7 +79,12 @@ for row in candidates:
   print('candidate: : ', row[0], " | 1 day delta: ", df3.iloc[:,0][-1] - df3.iloc[:,0][0] )
   print('candidate: : ', row[0], " | 7 day delta: ", df4.iloc[:,0][-1] - df4.iloc[:,0][0] )
   print('candidate: : ', row[0], " | 5 yr delta: ", df5.iloc[:,0][-1] - df5.iloc[:,0][0] )
-  cur.execute("INSERT INTO Gtrend_DELTA (id, name, onemonth, threemonth, oneday, sevenday, fiveyear) VALUES (?, ?, ? ,?,?, ?, ?)", (candidate_count, name,  df.iloc[:,0][-1] - df.iloc[:,0][0],  df2.iloc[:,0][-1] - df2.iloc[:,0][0],  df3.iloc[:,0][-1] - df3.iloc[:,0][0],  df4.iloc[:,0][-1] - df4.iloc[:,0][0],  df5.iloc[:,0][-1] - df5.iloc[:,0][0] ))
+  onemonth= df.iloc[:,0][-1] - df.iloc[:,0][0]
+  threemonth= df2.iloc[:,0][-1] - df2.iloc[:,0][0] 
+  oneday=df3.iloc[:,0][-1] - df3.iloc[:,0][0]
+  sevenday=df4.iloc[:,0][-1] - df4.iloc[:,0][0] 
+  fiveyear= df5.iloc[:,0][-1] - df5.iloc[:,0][0]
+  cur.execute("INSERT INTO Gtrend_DELTA (id, name, onemonth, threemonth, oneday, sevenday, fiveyear) VALUES (?, ?, ? ,?,?, ?, ?)", (id, name, onemonth, threemonth, oneday, sevenday, fiveyear ))
 
   candidate_count += 1
   #mean.append(df[row[0]].mean())
