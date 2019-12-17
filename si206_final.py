@@ -100,11 +100,14 @@ print(mean[1])
 candidates_df['mean_30_days'] = mean
 candidates_df['delta_30_days'] = delta
 
-candidates_df
 
 candidates_df['mean_30_days'].tolist()
 
-fig = go.FigureWidget(data=go.Bar( y=candidates_df['mean_30_days'] ))
+# layout = go.Layout(title='Mean Interest Over 30 Days')
+fig = go.FigureWidget(data=go.Bar( x=candidates_df['Candidate'],y=candidates_df['mean_30_days'] ))
+fig.layout.title = 'Mean Interest in Candidates Over 30 Days'
+fig.update_layout(title_x=0.5)
+fig.update_layout(xaxis_title="Candidate", yaxis_title="Interest")
 
 fig.show()
 
