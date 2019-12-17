@@ -16,8 +16,9 @@ import pandas as pd
 import matplotlib as plt
 import plotly.graph_objects as go
 import urllib.request
-from google.colab import files 
-uploaded = files.upload()
+
+# from google.colab import files
+# files.upload()
 
 #library and API import statements
 #NOTE: WE WILL NEED USE CACHING WITH API REQUESTS for https://www.sitetrafficapi.com/ | Google Trends (pytrends)
@@ -62,6 +63,8 @@ def sample(df) :
 sample(candidates_df).head()
 #once done just save it to the original df
 
+
+
 #WHAT IS THE OPTIMIZED WAY OF ORGANIZING ALL OUR WORK HERE
 
 #WHAT DO WE CACHE. WE SHOULD BE ABLE TO SAVE MORE WORK 
@@ -72,7 +75,7 @@ sample(candidates_df).head()
 
 # df = pd.read_sql_query("SELECT * FROM table_name", cnx)
 
-!pip install pytrends
+# !pip install pytrends
 
 from pytrends.request import TrendReq
 
@@ -87,20 +90,21 @@ for row in candidates:
   # print("full name: ", row[0])
   pytrends.build_payload([row[0]], cat=0, timeframe='today 1-m', geo='', gprop='')
   df = pytrends.interest_over_time()
+  print(df)
   mean.append(df[row[0]].mean())
   # print('delta: ', df.iloc[:,0][-1] - df.iloc[:,0][0])
   delta.append(df.iloc[:,0][-1] - df.iloc[:,0][0])
 
 print(mean[1])
 
-candidates_df['mean'] = mean
-candidates_df['delta'] = delta
+candidates_df['mean_30_days'] = mean
+candidates_df['delta_30_days'] = delta
 
 candidates_df
 
-candidates_df['mean'].tolist()
+candidates_df['mean_30_days'].tolist()
 
-fig = go.FigureWidget(data=go.Bar( y=candidates_df['mean'] ))
+fig = go.FigureWidget(data=go.Bar( y=candidates_df['mean_30_days'] ))
 
 fig.show()
 
@@ -120,41 +124,149 @@ def read_cache(CACHE_FNAME):
     
     return CACHE_DICTION
 
-def get_data_with_caching(candidate_website):
+import requests
 
+def get_sitetraffic(candidates, cur, conn):
+  cur.execute("DROP TABLE IF EXISTS WebsiteData")
+  cur.execute("DROP TABLE IF EXISTS WebsiteDelta")
+  cur.execute("CREATE TABLE WebsiteData (id INT PRIMARY KEY, candidate TEXT, category TEXT, score REAL)")
+  cur.execute("CREATE TABLE WebsiteDelta (id INT PRIMARY KEY, candidate TEXT, category TEXT, score REAL)")
     # api_c_code  = country_code      # country code (e.g. "USA", "USA;CAN")
     # api_type    = "EN.ATM.CO2E.PC"  # CO2 emissions data (metric tons per capita)
     # api_year    = year              # year (e.g. 2000)
     # api_per_page= per_page          # maximum return items (the default value is 50)
+  data_id = 0
+  delta_id = 0
+  for candidate in candidates:
+    candidate_website = candidate[1]
+    request_url    = "https://endpoint.sitetrafficapi.com/pay-as-you-go/?key=4042b83167e850cb15abd025611917b802556ddd&host={}".format(candidate_website)
+    data = requests.get(request_url).json()
+    print(data)
+    print(candidate[0])
+    score = data['data']['estimations']['visitors']['daily']
+    if (score != None):
+      score = int(score.replace(',',''))
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Daily Visitors', score))
+      data_id += 1
+    score = data['data']['estimations']['visitors']['monthly']
+    if (score != None):
+      score = int(score.replace(',',''))
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Monthly Visitors', score))
+      data_id += 1
+    score = data['data']['estimations']['visitors']['yearly']
+    if (score != None):
+      score = int(score.replace(',',''))
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Yearly Visitors', score))
+      data_id += 1
+    score = data['data']['estimations']['pageviews']['daily']
+    if (score != None):
+      score = int(score.replace(',',''))
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Daily Pageviews', score))
+      data_id += 1
+    score = data['data']['estimations']['pageviews']['monthly']
+    if (score != None):
+      score = int(score.replace(',',''))
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Monthly Pageviews', score))
+      data_id += 1
+    score = data['data']['estimations']['pageviews']['yearly']
+    if (score != None):
+      score = int(score.replace(',',''))
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Yearly Pageviews', score))
+      data_id += 1
+    score = data['data']['alexa']['rank']['3_months']
+    if (score != None):
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Rank Over 3 Months', score))
+      data_id += 1
+    score = data['data']['alexa']['rank']['1_month']
+    if (score != None):
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Rank Over 1 Month', score))
+      data_id += 1
+    score = data['data']['alexa']['rank']['7_days']
+    if (score != None):
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Rank Over 1 Week', score))
+      data_id += 1
+    score = data['data']['alexa']['rank']['1_day']
+    if (score != None):
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Rank Over 1 Day', score))
+      data_id += 1
+    score = data['data']['alexa']['pageviews']['3_months']
+    if (score != None):
+      score = int(score.replace(',',''))
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Pageviews Over 3 Months', score))
+      data_id += 1
+    score = data['data']['alexa']['pageviews']['1_month']
+    if (score != None):
+      score = int(score.replace(',',''))
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Pageviews Over 1 Month', score))
+      data_id += 1
+    score = data['data']['alexa']['pageviews']['7_days']
+    if (score != None):
+      score = int(score.replace(',',''))
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Pageviews Over 1 Week', score))
+      data_id += 1
+    score = data['data']['alexa']['pageviews']['1_day']
+    if (score != None):
+      score = int(score.replace(',',''))    
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Pageviews Over 1 Day', score))
+      data_id += 1
+    score = data['data']['alexa']['reach']['3_months']
+    if (score != None):
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Reach Over 3 Months', score))
+      data_id += 1
+    score = data['data']['alexa']['reach']['1_month']
+    if (score != None):
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Reach Over 1 Month', score))
+      data_id += 1
+    score = data['data']['alexa']['reach']['7_days']
+    if (score != None):
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Reach Over 1 Week', score))
+      data_id += 1
+    score = data['data']['alexa']['reach']['1_day']
+    if (score != None):
+      cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Reach Over 1 Day', score))
+      data_id += 1
+    score = data['data']['alexa']['rank_delta']['3_months']
+    if (score != None):
+      if (score[0] == '+'):
+        score = score[1:]
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Rank Over 3 Months', score))
+    delta_id += 1
+    score = data['data']['alexa']['rank_delta']['1_month']
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Rank Over 1 Month', score))
+    delta_id += 1
+    score = data['data']['alexa']['rank_delta']['7_days']
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Rank Over 1 Week', score))
+    delta_id += 1
+    score = data['data']['alexa']['rank_delta']['1_day']
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Rank Over 1 Day', score))
+    delta_id += 1
+    score = data['data']['alexa']['pageviews_delta']['3_months']
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Pageviews Over 3 Months', score))
+    delta_id += 1
+    score = data['data']['alexa']['pageviews_delta']['1_month']
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Pageviews Over 1 Month', score))
+    delta_id += 1
+    score = data['data']['alexa']['pageviews_delta']['7_days']
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Pageviews Over 1 Week', score))
+    delta_id += 1
+    score = data['data']['alexa']['pageviews_delta']['1_day']
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Pageviews Over 1 Day', score))
+    delta_id += 1    
+    score = data['data']['alexa']['reach_delta']['3_months']
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Reacb Over 3 Months', score))
+    delta_id += 1
+    score = data['data']['alexa']['reach_delta']['1_month']
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Reach Over 1 Month', score))
+    delta_id += 1
+    score = data['data']['alexa']['reach_delta']['7_days']
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Reach Over 1 Week', score))
+    delta_id += 1
+    score = data['data']['alexa']['reach_delta']['1_day']
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Recah Over 1 Day', score))
+    delta_id += 1
+  conn.commit()
 
-
-    request_url    = "https://endpoint.sitetrafficapi.com/pay-as-you-go/?key=cb5c91e8e43aee5bda0e2848eaa836de8adb19d9&host={}".format(candidate_website)
-
-    #dir_path = os.path.dirname(os.path.realpath(__file__))
-    #CACHE_FNAME = dir_path + '/' + "site_traffic.json"
-    CACHE_DICTION  = read_cache(uploaded)
-
-    if request_url in CACHE_DICTION:
-            print("Using cache for {}".format(candidate_website))
-            return CACHE_DICTION[request_url]
-    else:
-        print("Fetching for {}".format(candidate_website) )
-        print(request_url)
-        uh = urllib.request.urlopen(request_url)
-        data = uh.read().decode()
-        
-        try:
-            CACHE_DICTION[request_url] =  json.loads(data)
-            dumped_json_cache = json.dumps(CACHE_DICTION)
-            fw = open(uploaded,"w")
-            fw.write(dumped_json_cache)
-            fw.close() # Close the open file
-            return CACHE_DICTION[request_url]
-        except:
-            print("Exception")
-            return None
-
-get_data_with_caching("https://yang2020.com/")
+# get_data_with_caching("https://yang2020.com/")
 
 def setUpDatabase(db_name):
     #path = os.path.dirname(os.path.abspath(__file__))
@@ -162,11 +274,11 @@ def setUpDatabase(db_name):
     cur = conn.cursor()
     return cur, conn
 
-!pip install realclearpolitics
+# !pip install realclearpolitics
 
-from rcp import get_polls, get_poll_data, to_csv
-import re
-import sqlite3
+# from rcp import get_polls, get_poll_data, to_csv
+# import re
+# import sqlite3
 
 def get_real_clear_politics(candidates, cur, conn):
   # cur.execute("DROP TABLE IF EXISTS DemPrimary")
@@ -246,5 +358,5 @@ def get_real_clear_politics(candidates, cur, conn):
             poll_count += 1
   conn.commit()
 
-cur, conn = setUpDatabase('CandidateData.db')
-get_real_clear_politics(candidates, cur, conn)
+# cur, conn = setUpDatabase('CandidateData.db')
+# get_real_clear_politics(candidates, cur, conn)
