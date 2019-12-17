@@ -361,5 +361,19 @@ def get_real_clear_politics(candidates, cur, conn):
             poll_count += 1
   conn.commit()
 
+
 # cur, conn = setUpDatabase('CandidateData.db')
 # get_real_clear_politics(candidates, cur, conn)
+
+cur, conn = setUpDatabase('CandidateData.db')
+cur.execute("SELECT candidate, category, score  FROM WebsiteData WHERE category='Yearly Visitors'")
+yearly_visitor= cur.fetchall()
+yearly_df = pd.DataFrame(yearly_visitor)
+yearly_df.columns = ["Candidate", "Category", "Yearly Visitors"]
+print(yearly_df)
+print(yearly_visitor)
+fig = go.FigureWidget(data=go.Bar( x=yearly_df['Candidate'],y=yearly_df['Yearly Visitors'] ))
+fig.layout.title = 'Yearly Visitors to Candidates\' Sites'
+fig.update_layout(title_x=0.5)
+fig.update_layout(xaxis_title="Candidate", yaxis_title="Yearly Visitors")
+fig.show()
