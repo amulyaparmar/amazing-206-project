@@ -30,17 +30,17 @@ cur, conn = setUpDatabase('CandidateData1.db')
 
 candidates = [
  
-["Andrew Yang", "yang2020.com"],
-["Kamala Harris", "kamalaharris.org"],
-["Bernie Sanders","berniesanders.com"],
-["Mike Bloomberg", "mikebloomberg.com"],
-["Joe Biden",	"joebiden.com"],
-["Pete Buttigieg", "peteforamerica.com"],
-["Elizabeth Warren",	"elizabethwarren.com"],
-["Tulsi Gabbard", "tulsi2020.com"],
-["Amy Klobucher", "amyklobuchar.com"],
-["Tom Steyer", "tomsteyer.com"],
-["Donald Trump", "donaldjtrump.com"]
+["Andrew Yang", "yang2020.com", "AndrewYang"],
+["Kamala Harris", "kamalaharris.org", "KamalaHarris"],
+["Bernie Sanders","berniesanders.com", "BernieSanders"],
+["Mike Bloomberg", "mikebloomberg.com", "MikeBloomberg"],
+["Joe Biden",	"joebiden.com", "JoeBiden"],
+["Pete Buttigieg", "peteforamerica.com", "PeteButtigieg"],
+["Elizabeth Warren",	"elizabethwarren.com", "ewarren"],
+["Tulsi Gabbard", "tulsi2020.com", "TulsiGabbard"],
+["Amy Klobucher", "amyklobuchar.com", "amyklobuchar"],
+["Tom Steyer", "tomsteyer.com", "TomSteyer"],
+["Donald Trump", "donaldjtrump.com","realDonaldTrump"]
 ]
 
 
@@ -155,3 +155,30 @@ df.iloc[:, [0,1,3]].plot(kind="bar", title="Delta in Google Trend Searches acros
 
 
 # %%
+
+
+
+import tweepy
+import numpy as np
+
+consumer_key = "nDbRA7vy5j0nxhBtZloHn7xee"
+consumer_secret = "aIEVKKPeFjbjqZoyjRObUoMSsTcTXzxfzrBWr4g8T9coIUyNev"
+access_token = "703356714-BaFvjE2YkCCB5zJkyFZCCNDTfnmWnwSVKEXh7cXR"
+access_token_secret = "N75fvl0rPehgtO7v5oNZcdI3GAUzqGMqhnmcMVW3ttWGM"
+
+
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tweepy.API(auth)
+
+candidate_df.set_index(0)
+candidate_df['Twitter Followers'] = np.nan
+
+for index, val in candidate_df[2].iteritems():
+    user = api.get_user(val)
+    candidate_df['Twitter Followers'][index] = user.followers_count
+
+    print(user.name, user.followers_count)
+
+
+print(candidate_df.head())
