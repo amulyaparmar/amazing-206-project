@@ -16,6 +16,7 @@ import pandas as pd
 import matplotlib as plt
 import plotly.graph_objects as go
 import urllib.request
+import plotly.express as px
 
 # from google.colab import files
 # files.upload()
@@ -279,13 +280,11 @@ def setUpDatabase(db_name):
 
 # !pip install realclearpolitics
 
-# from rcp import get_polls, get_poll_data, to_csv
-# import re
-# import sqlite3
+from rcp import get_polls, get_poll_data, to_csv
+import re
+import sqlite3
 
 def get_real_clear_politics(candidates, cur, conn):
-  # cur.execute("DROP TABLE IF EXISTS DemPrimary")
-  # cur.execute("DROP TABLE IF EXISTS DemGeneral")
   cur.execute("SELECT count(name) FROM sqlite_master WHERE type=? AND name=?", ('table', 'DemPrimary'))
   if cur.fetchone()[0] != 1:
     cur.execute("CREATE TABLE DemPrimary (id INT PRIMARY KEY, name TEXT, percent REAL)")
@@ -365,7 +364,7 @@ def get_real_clear_politics(candidates, cur, conn):
 # cur, conn = setUpDatabase('CandidateData.db')
 # get_real_clear_politics(candidates, cur, conn)
 
-cur, conn = setUpDatabase('CandidateData.db')
+cur, conn = setUpDatabase('CandidateData1.db')
 cur.execute("SELECT candidate, category, score  FROM WebsiteData WHERE category='Yearly Visitors'")
 yearly_visitor= cur.fetchall()
 yearly_df = pd.DataFrame(yearly_visitor)
@@ -377,3 +376,54 @@ fig.layout.title = 'Yearly Visitors to Candidates\' Sites'
 fig.update_layout(title_x=0.5)
 fig.update_layout(xaxis_title="Candidate", yaxis_title="Yearly Visitors")
 fig.show()
+
+
+primary_averages = []
+for candidate in candidates:
+  name = candidate[0]
+  cur.execute("SELECT * FROM DemPrimary WHERE name=?", (name,))
+  average = 0
+  results = cur.fetchall()
+  if (len(results) != 0):
+    for row in results:
+      average += row[2]
+    average /= len(results)
+    primary_averages.append((name, average))
+print(primary_averages)
+primary_df = pd.DataFrame(primary_averages)
+primary_df.columns = ["Candidate", "Average Percent"]
+print(primary_df)
+
+fig_prim = go.FigureWidget(data=go.Bar( x=primary_df['Candidate'],y=primary_df['Average Percent'] ))
+fig_prim.layout.title = 'Average Percent Support of Candidates in the Primary'
+fig_prim.update_layout(title_x=0.5)
+fig_prim.update_layout(xaxis_title="Candidate", yaxis_title="Average Percent Support")
+fig_prim.show()
+
+general_averages = []
+for candidate in candidates:
+  name = candidate[0]
+  cur.execute("SELECT * FROM DemGeneral WHERE name=?", (name,))
+  dem_average = 0
+  trump_average = 0
+  results = cur.fetchall()
+  if (len(results) != 0):
+    for row in results:
+      dem_average += row[2]
+      trump_average += row[3]
+    dem_average /= len(results)
+    trump_average /= len(results)      
+    general_averages.append((name, dem_average, trump_average))
+gen_df = pd.DataFrame(general_averages)
+gen_df.columns = ["Democrat", "Democrat Percent", "Trump Percent"]  
+
+gen_fig = go.Figure(data=[
+    go.Bar(name='Candidate Percent', x=gen_df["Democrat"], y=gen_df["Democrat Percent"]),
+    go.Bar(name='Trump Percent', x=gen_df["Democrat"], y=gen_df["Trump Percent"])
+])
+gen_fig.layout.title = 'Average Percent Support of Democrat Candidates Against Trump in the Primary'
+# Change the bar mode
+gen_fig.update_layout(barmode='group')
+gen_fig.update_layout(title_x=0.5)
+gen_fig.update_layout(xaxis_title="Candidate", yaxis_title="Average Percent Support")
+gen_fig.show()
