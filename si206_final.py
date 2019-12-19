@@ -26,6 +26,8 @@ import plotly.express as px
 
 #https://docs.google.com/spreadsheets/d/1yYtDt0Eg6-u8GrPw0f7kru1ru-cd5HefIojkdyUn6ds/edit#gid=0
 
+outfile = open("calculation-results.txt","w") 
+
 candidates = [
  
 ["Andrew Yang", "yang2020.com"],
@@ -393,7 +395,7 @@ print(primary_averages)
 primary_df = pd.DataFrame(primary_averages)
 primary_df.columns = ["Candidate", "Average Percent"]
 print(primary_df)
-
+export_csv = primary_df.to_csv (r'primary_averages.csv', index = None, header=True)
 fig_prim = go.FigureWidget(data=go.Bar( x=primary_df['Candidate'],y=primary_df['Average Percent'] ))
 fig_prim.layout.title = 'Average Percent Support of Candidates in the Primary'
 fig_prim.update_layout(title_x=0.5)
@@ -427,3 +429,5 @@ gen_fig.update_layout(barmode='group')
 gen_fig.update_layout(title_x=0.5)
 gen_fig.update_layout(xaxis_title="Candidate", yaxis_title="Average Percent Support")
 gen_fig.show()
+
+outfile.close()
