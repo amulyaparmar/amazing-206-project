@@ -279,13 +279,11 @@ def setUpDatabase(db_name):
 
 # !pip install realclearpolitics
 
-# from rcp import get_polls, get_poll_data, to_csv
-# import re
-# import sqlite3
+from rcp import get_polls, get_poll_data, to_csv
+import re
+import sqlite3
 
 def get_real_clear_politics(candidates, cur, conn):
-  # cur.execute("DROP TABLE IF EXISTS DemPrimary")
-  # cur.execute("DROP TABLE IF EXISTS DemGeneral")
   cur.execute("SELECT count(name) FROM sqlite_master WHERE type=? AND name=?", ('table', 'DemPrimary'))
   if cur.fetchone()[0] != 1:
     cur.execute("CREATE TABLE DemPrimary (id INT PRIMARY KEY, name TEXT, percent REAL)")
@@ -365,7 +363,7 @@ def get_real_clear_politics(candidates, cur, conn):
 # cur, conn = setUpDatabase('CandidateData.db')
 # get_real_clear_politics(candidates, cur, conn)
 
-cur, conn = setUpDatabase('CandidateData.db')
+cur, conn = setUpDatabase('CandidateData1.db')
 cur.execute("SELECT candidate, category, score  FROM WebsiteData WHERE category='Yearly Visitors'")
 yearly_visitor= cur.fetchall()
 yearly_df = pd.DataFrame(yearly_visitor)
@@ -377,3 +375,26 @@ fig.layout.title = 'Yearly Visitors to Candidates\' Sites'
 fig.update_layout(title_x=0.5)
 fig.update_layout(xaxis_title="Candidate", yaxis_title="Yearly Visitors")
 fig.show()
+
+
+primary_averages = []
+for candidate in candidates:
+  name = candidate[0]
+  cur.execute("SELECT * FROM DemPrimary WHERE name=?", (name,))
+  average = 0
+  results = cur.fetchall()
+  if (len(results) != 0):
+    for row in results:
+      average += row[2]
+    average /= len(results)
+    primary_averages.append((name, average))
+print(primary_averages)
+primary_df = pd.DataFrame(primary_averages)
+primary_df.columns = ["Candidate", "Average Percent"]
+print(primary_df)
+
+fig_prim = go.FigureWidget(data=go.Bar( x=primary_df['Candidate'],y=primary_df['Average Percent'] ))
+fig_prim.layout.title = 'Average Percent Support of Candidates in the Primary'
+fig_prim.update_layout(title_x=0.5)
+fig_prim.update_layout(xaxis_title="Candidate", yaxis_title="Average Percent Support")
+fig_prim.show()
