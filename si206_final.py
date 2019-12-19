@@ -16,6 +16,7 @@ import pandas as pd
 import matplotlib as plt
 import plotly.graph_objects as go
 import urllib.request
+import plotly.express as px
 
 # from google.colab import files
 # files.upload()
@@ -398,3 +399,31 @@ fig_prim.layout.title = 'Average Percent Support of Candidates in the Primary'
 fig_prim.update_layout(title_x=0.5)
 fig_prim.update_layout(xaxis_title="Candidate", yaxis_title="Average Percent Support")
 fig_prim.show()
+
+general_averages = []
+for candidate in candidates:
+  name = candidate[0]
+  cur.execute("SELECT * FROM DemGeneral WHERE name=?", (name,))
+  dem_average = 0
+  trump_average = 0
+  results = cur.fetchall()
+  if (len(results) != 0):
+    for row in results:
+      dem_average += row[2]
+      trump_average += row[3]
+    dem_average /= len(results)
+    trump_average /= len(results)      
+    general_averages.append((name, dem_average, trump_average))
+gen_df = pd.DataFrame(general_averages)
+gen_df.columns = ["Democrat", "Democrat Percent", "Trump Percent"]  
+
+gen_fig = go.Figure(data=[
+    go.Bar(name='Candidate Percent', x=gen_df["Democrat"], y=gen_df["Democrat Percent"]),
+    go.Bar(name='Trump Percent', x=gen_df["Democrat"], y=gen_df["Trump Percent"])
+])
+gen_fig.layout.title = 'Average Percent Support of Democrat Candidates Against Trump in the Primary'
+# Change the bar mode
+gen_fig.update_layout(barmode='group')
+gen_fig.update_layout(title_x=0.5)
+gen_fig.update_layout(xaxis_title="Candidate", yaxis_title="Average Percent Support")
+gen_fig.show()
