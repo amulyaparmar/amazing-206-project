@@ -399,6 +399,7 @@ fig_prim.layout.title = 'Average Percent Support of Candidates in the Primary'
 fig_prim.update_layout(title_x=0.5)
 fig_prim.update_layout(xaxis_title="Candidate", yaxis_title="Average Percent Support")
 fig_prim.show()
+fig_prim.write_image("avg_primary_polling_results.png")
 
 general_averages = []
 for candidate in candidates:
@@ -428,4 +429,5 @@ gen_fig.update_layout(title_x=0.5)
 gen_fig.update_layout(xaxis_title="Candidate", yaxis_title="Average Percent Support")
 gen_fig.show()
 gen_df.to_csv (r'general_averages.csv', index = None, header=True)
+gen_fig.write_image("avg_general_polling_results.png")
 outfile.close()
