@@ -26,6 +26,8 @@ import plotly.express as px
 
 #https://docs.google.com/spreadsheets/d/1yYtDt0Eg6-u8GrPw0f7kru1ru-cd5HefIojkdyUn6ds/edit#gid=0
 
+outfile = open("calculation-results.txt","w") 
+
 candidates = [
  
 ["Andrew Yang", "yang2020.com"],
@@ -131,8 +133,6 @@ def read_cache(CACHE_FNAME):
 import requests
 
 def get_sitetraffic(candidates, cur, conn):
-  cur.execute("DROP TABLE IF EXISTS WebsiteData")
-  cur.execute("DROP TABLE IF EXISTS WebsiteDelta")
   cur.execute("CREATE TABLE WebsiteData (id INT PRIMARY KEY, candidate TEXT, category TEXT, score REAL)")
   cur.execute("CREATE TABLE WebsiteDelta (id INT PRIMARY KEY, candidate TEXT, category TEXT, score REAL)")
     # api_c_code  = country_code      # country code (e.g. "USA", "USA;CAN")
@@ -149,32 +149,32 @@ def get_sitetraffic(candidates, cur, conn):
     print(candidate[0])
     score = data['data']['estimations']['visitors']['daily']
     if (score != None):
-      score = int(score.replace(',',''))
+      score = float(score.replace(',',''))
       cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Daily Visitors', score))
       data_id += 1
     score = data['data']['estimations']['visitors']['monthly']
     if (score != None):
-      score = int(score.replace(',',''))
+      score = float(score.replace(',',''))
       cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Monthly Visitors', score))
       data_id += 1
     score = data['data']['estimations']['visitors']['yearly']
     if (score != None):
-      score = int(score.replace(',',''))
+      score = float(score.replace(',',''))
       cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Yearly Visitors', score))
       data_id += 1
     score = data['data']['estimations']['pageviews']['daily']
     if (score != None):
-      score = int(score.replace(',',''))
+      score = float(score.replace(',',''))
       cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Daily Pageviews', score))
       data_id += 1
     score = data['data']['estimations']['pageviews']['monthly']
     if (score != None):
-      score = int(score.replace(',',''))
+      score = float(score.replace(',',''))
       cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Monthly Pageviews', score))
       data_id += 1
     score = data['data']['estimations']['pageviews']['yearly']
     if (score != None):
-      score = int(score.replace(',',''))
+      score = float(score.replace(',',''))
       cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Yearly Pageviews', score))
       data_id += 1
     score = data['data']['alexa']['rank']['3_months']
@@ -195,22 +195,22 @@ def get_sitetraffic(candidates, cur, conn):
       data_id += 1
     score = data['data']['alexa']['pageviews']['3_months']
     if (score != None):
-      score = int(score.replace(',',''))
+      score = float(score.replace(',',''))
       cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Pageviews Over 3 Months', score))
       data_id += 1
     score = data['data']['alexa']['pageviews']['1_month']
     if (score != None):
-      score = int(score.replace(',',''))
+      score = float(score.replace(',',''))
       cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Pageviews Over 1 Month', score))
       data_id += 1
     score = data['data']['alexa']['pageviews']['7_days']
     if (score != None):
-      score = int(score.replace(',',''))
+      score = float(score.replace(',',''))
       cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Pageviews Over 1 Week', score))
       data_id += 1
     score = data['data']['alexa']['pageviews']['1_day']
     if (score != None):
-      score = int(score.replace(',',''))    
+      score = float(score.replace(',',''))    
       cur.execute("INSERT INTO WebsiteData (id, candidate, category, score) VALUES (?,?,?,?)", (data_id, candidate[0], 'Pageviews Over 1 Day', score))
       data_id += 1
     score = data['data']['alexa']['reach']['3_months']
@@ -257,7 +257,7 @@ def get_sitetraffic(candidates, cur, conn):
     cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Pageviews Over 1 Day', score))
     delta_id += 1    
     score = data['data']['alexa']['reach_delta']['3_months']
-    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Reacb Over 3 Months', score))
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Reach Over 3 Months', score))
     delta_id += 1
     score = data['data']['alexa']['reach_delta']['1_month']
     cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Reach Over 1 Month', score))
@@ -266,7 +266,7 @@ def get_sitetraffic(candidates, cur, conn):
     cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Reach Over 1 Week', score))
     delta_id += 1
     score = data['data']['alexa']['reach_delta']['1_day']
-    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Recah Over 1 Day', score))
+    cur.execute("INSERT INTO WebsiteDelta (id, candidate, category, score) VALUES (?,?,?,?)", (delta_id, candidate[0], 'Reach Over 1 Day', score))
     delta_id += 1
   conn.commit()
 
@@ -277,6 +277,133 @@ def setUpDatabase(db_name):
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
     return cur, conn
+
+from pytrends.request import TrendReq
+
+def get_gtrends(candidates):
+  cur, conn = setUpDatabase('CandidateData.db')
+
+
+  cur.execute('DROP TABLE IF EXISTS Gtrend_MEAN')
+  cur.execute('DROP TABLE IF EXISTS Gtrend_DELTA')
+
+  cur.execute("CREATE TABLE Gtrend_MEAN (row_number INT PRIMARY KEY, id INT, name TEXT, time_period TEXT, score REAL)")
+  cur.execute("CREATE TABLE Gtrend_DELTA (row_number INT PRIMARY KEY, id INT, name TEXT, time_period TEXT, score REAL)")
+  candidates_df = pd.DataFrame(candidates)
+  candidates_df.columns = ["Candidate", "Website"]
+
+  #!pip install pytrends
+
+  pytrends = TrendReq(hl='en-US', tz=360, retries=20, backoff_factor=10)
+  mean = []
+  delta = []
+  candidate_count = 0
+  row_number=0
+  delta_row_number=0
+  for row in candidates:
+    # print("full name: ", row[0])
+    name = row[0]
+    pytrends.build_payload([row[0]], cat=0, timeframe='today 1-m', geo='', gprop='')
+    df = pytrends.interest_over_time()
+    pytrends.build_payload([row[0]], cat=0, timeframe='today 3-m', geo='', gprop='')
+    df2 = pytrends.interest_over_time()
+    pytrends.build_payload([row[0]], cat=0, timeframe='now 1-d', geo='', gprop='')
+    df3 = pytrends.interest_over_time()
+    pytrends.build_payload([row[0]], cat=0, timeframe='now 7-d', geo='', gprop='')
+    df4 = pytrends.interest_over_time()
+    pytrends.build_payload([row[0]], cat=0, timeframe='today 5-y', geo='', gprop='')
+    df5 = pytrends.interest_over_time() 
+    pytrends.build_payload([row[0]], cat=0, timeframe='2015-12-19 2019-12-19', geo='', gprop='')
+    df7 = pytrends.interest_over_time() 
+    pytrends.build_payload([row[0]], cat=0, timeframe='2016-12-19 2019-12-19', geo='', gprop='')
+    df8 = pytrends.interest_over_time() 
+    pytrends.build_payload([row[0]], cat=0, timeframe='2017-12-19 2019-12-19', geo='', gprop='')
+    df9 = pytrends.interest_over_time() 
+    pytrends.build_payload([row[0]], cat=0, timeframe='2018-12-18 2019-12-18', geo='', gprop='')
+    df10 = pytrends.interest_over_time() 
+    pytrends.build_payload([row[0]], cat=0, timeframe='2019-11-27 2019-12-18', geo='', gprop='')
+    df11 = pytrends.interest_over_time() 
+
+    print('candidate: : ', row[0], " | 1 day  mean: ", df3[row[0]].mean() )
+    print('candidate: : ', row[0], " | 7 day mean: ", df4[row[0]].mean() )
+    print('candidate: : ', row[0], " | 30 day mean: ", df[row[0]].mean() )
+    print('candidate: : ', row[0], " | 90 day mean: ", df2[row[0]].mean() )
+    print('candidate: : ', row[0], " | 5 yr mean: ", df5[row[0]].mean() )
+    
+    
+
+
+    #cur.execute("INSERT INTO Gtrend_MEAN (id, name, onemonth, threemonth, oneday, sevenday, fiveyear) VALUES (?, ?, ? ,?,?, ?, ?)", (candidate_count, name, df[row[0]].mean(), df2[row[0]].mean(), df3[row[0]].mean(), df4[row[0]].mean(), df5[row[0]].mean() ))
+    cur.execute("INSERT INTO Gtrend_MEAN (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(row_number, candidate_count, name, "one day", df3[row[0]].mean()))
+    row_number+=1
+    cur.execute("INSERT INTO Gtrend_MEAN (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(row_number, candidate_count, name, "seven days", df4[row[0]].mean()))
+    row_number+=1
+    cur.execute("INSERT INTO Gtrend_MEAN (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(row_number, candidate_count, name, "three weeks", df11[row[0]].mean()))
+    row_number+=1
+    cur.execute("INSERT INTO Gtrend_MEAN (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(row_number,candidate_count, name, "one month", df[row[0]].mean()))
+    row_number+=1
+    cur.execute("INSERT INTO Gtrend_MEAN (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(row_number,candidate_count, name, "three months", df2[row[0]].mean()))
+    row_number+=1
+    cur.execute("INSERT INTO Gtrend_MEAN (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(row_number, candidate_count, name, "three years", df8[row[0]].mean()))
+    row_number+=1
+    cur.execute("INSERT INTO Gtrend_MEAN (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(row_number, candidate_count, name, "one year", df10[row[0]].mean()))
+    row_number+=1
+    cur.execute("INSERT INTO Gtrend_MEAN (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(row_number, candidate_count, name, "two years", df9[row[0]].mean()))
+    row_number+=1
+    cur.execute("INSERT INTO Gtrend_MEAN (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(row_number, candidate_count, name, "three years", df8[row[0]].mean()))
+    row_number+=1
+    cur.execute("INSERT INTO Gtrend_MEAN (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(row_number, candidate_count, name, "four years", df7[row[0]].mean()))
+    row_number+=1
+    cur.execute("INSERT INTO Gtrend_MEAN (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(row_number, candidate_count, name, "five years", df5[row[0]].mean()))
+    row_number+=1
+    
+    if (row[0]=="Kamala Harris"):
+      pytrends.build_payload([row[0]], cat=0, timeframe='2019-12-01 2019-12-08', geo='', gprop='')
+      df6 = pytrends.interest_over_time()
+      for i in range(0,len(df6)):
+        cur.execute("INSERT INTO Gtrend_MEAN (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(row_number, candidate_count, name, "December 1-8", float(df6[row[0]][i])))
+        row_number+=1
+
+  
+
+    
+    print('candidate: : ', row[0], " | 30 day delta: ",  df[row[0]][-1] - df[row[0]][0] )
+    print('candidate: : ', row[0], " | 90 day delta: ",  df2[row[0]][-1] - df2[row[0]][0])
+    print('candidate: : ', row[0], " | 1 day delta: ", df3[row[0]][-1] - df3[row[0]][0] )
+    print('candidate: : ', row[0], " | 7 day delta: ", df4[row[0]][-1] - df4[row[0]][0] )
+    print('candidate: : ', row[0], " | 5 yr delta: ", df5[row[0]][-1] - df5[row[0]][0] )
+
+    #cur.execute("INSERT INTO Gtrend_DELTA (id, name, onemonth, threemonth, oneday, sevenday, fiveyear) VALUES (?, ?, ? ,?,?, ?, ?)", (candidate_count, name,  float(df.iloc[:,0][-1] - df.iloc[:,0][0]),  float(df2.iloc[:,0][-1] - df2.iloc[:,0][0]),  float(df3.iloc[:,0][-1] - df3.iloc[:,0][0]), float(df4.iloc[:,0][-1] - df4.iloc[:,0][0]),  float(df5.iloc[:,0][-1] - df5.iloc[:,0][0]) ))
+    cur.execute("INSERT INTO Gtrend_DELTA (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(delta_row_number,candidate_count, name, "one day", float(df3.iloc[:,0][-1] - df3.iloc[:,0][0])))
+    delta_row_number+=1
+    cur.execute("INSERT INTO Gtrend_DELTA (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(delta_row_number,candidate_count, name, "seven days", float(df4.iloc[:,0][-1] - df4.iloc[:,0][0])))
+    delta_row_number+=1
+    cur.execute("INSERT INTO Gtrend_DELTA (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(delta_row_number,candidate_count, name, "three weeks", float(df11.iloc[:,0][-1] - df11.iloc[:,0][0])))
+    delta_row_number+=1
+    cur.execute("INSERT INTO Gtrend_DELTA (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(delta_row_number,candidate_count, name, "one month", float(df.iloc[:,0][-1] - df.iloc[:,0][0])))
+    delta_row_number+=1
+    cur.execute("INSERT INTO Gtrend_DELTA (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(delta_row_number, candidate_count, name, "three months", float(df2.iloc[:,0][-1] - df2.iloc[:,0][0])))
+    delta_row_number+=1
+    cur.execute("INSERT INTO Gtrend_DELTA (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(delta_row_number,candidate_count, name, "one years", float(df10.iloc[:,0][-1] - df10.iloc[:,0][0])))
+    delta_row_number+=1
+    cur.execute("INSERT INTO Gtrend_DELTA (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(delta_row_number,candidate_count, name, "two years", float(df9.iloc[:,0][-1] - df9.iloc[:,0][0])))
+    delta_row_number+=1
+    cur.execute("INSERT INTO Gtrend_DELTA (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(delta_row_number,candidate_count, name, "three years", float(df8.iloc[:,0][-1] - df8.iloc[:,0][0])))
+    delta_row_number+=1
+    cur.execute("INSERT INTO Gtrend_DELTA (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(delta_row_number,candidate_count, name, "four years", float(df7.iloc[:,0][-1] - df7.iloc[:,0][0])))
+    delta_row_number+=1
+    cur.execute("INSERT INTO Gtrend_DELTA (row_number, id, name, time_period, score) VALUES (?,?,?,?,?)",(delta_row_number,candidate_count, name, "five years", float(df5.iloc[:,0][-1] - df5.iloc[:,0][0])))
+    delta_row_number+=1
+    
+    
+
+
+    candidate_count += 1
+    #mean.append(df[row[0]].mean())
+    # print('delta: ', df.iloc[:,0][-1] - df.iloc[:,0][0])
+    #delta.append(df.iloc[:,0][-1] - df.iloc[:,0][0])
+
+  conn.commit()
 
 # !pip install realclearpolitics
 
@@ -393,12 +520,13 @@ print(primary_averages)
 primary_df = pd.DataFrame(primary_averages)
 primary_df.columns = ["Candidate", "Average Percent"]
 print(primary_df)
-
+primary_df.to_csv (r'primary_averages.csv', index = None, header=True)
 fig_prim = go.FigureWidget(data=go.Bar( x=primary_df['Candidate'],y=primary_df['Average Percent'] ))
 fig_prim.layout.title = 'Average Percent Support of Candidates in the Primary'
 fig_prim.update_layout(title_x=0.5)
 fig_prim.update_layout(xaxis_title="Candidate", yaxis_title="Average Percent Support")
 fig_prim.show()
+fig_prim.write_image("avg_primary_polling_results.png")
 
 general_averages = []
 for candidate in candidates:
@@ -427,3 +555,6 @@ gen_fig.update_layout(barmode='group')
 gen_fig.update_layout(title_x=0.5)
 gen_fig.update_layout(xaxis_title="Candidate", yaxis_title="Average Percent Support")
 gen_fig.show()
+gen_df.to_csv (r'general_averages.csv', index = None, header=True)
+gen_fig.write_image("avg_general_polling_results.png")
+outfile.close()

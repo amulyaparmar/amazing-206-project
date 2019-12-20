@@ -34,8 +34,6 @@ candidates = [
 import requests
 
 def get_sitetraffic(candidates, cur, conn):
-  cur.execute("DROP TABLE IF EXISTS WebsiteData")
-  cur.execute("DROP TABLE IF EXISTS WebsiteDelta")
   cur.execute("CREATE TABLE WebsiteData (id INT PRIMARY KEY, candidate TEXT, category TEXT, score REAL)")
   cur.execute("CREATE TABLE WebsiteDelta (id INT PRIMARY KEY, candidate TEXT, category TEXT, score REAL)")
     # api_c_code  = country_code      # country code (e.g. "USA", "USA;CAN")
