@@ -45,7 +45,7 @@ candidates_df.columns = ["Candidate", "Website"]
 
 from pytrends.request import TrendReq
 
-pytrends = TrendReq(hl='en-US', tz=360, retries=10, backoff_factor=0.5)
+pytrends = TrendReq(hl='en-US', tz=360, retries=20, backoff_factor=10)
 mean = []
 delta = []
 candidate_count = 0
