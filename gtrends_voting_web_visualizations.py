@@ -9,6 +9,7 @@ import os
 import pandas as pd
 import matplotlib as plt
 import urllib.request
+from textwrap import wrap
 
 
 1
@@ -21,7 +22,7 @@ def setUpDatabase(db_name):
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
     return cur, conn
-cur, conn = setUpDatabase('CandidateData1.db')
+cur, conn = setUpDatabase('CandidateData3.db')
 
 
 # In[ ]:
@@ -61,112 +62,178 @@ df = df.set_index("Candidate")
 df = df.iloc[:, 2:]
 df = df * 10
 
-cur.execute("SELECT * FROM Gtrend_MEAN")
-df2 = pd.DataFrame(cur.fetchall())
-df2 = df2.rename(columns={1: 'Candidate', 2: "Google Trends Mean over 1 Month", 3: "Three Month Mean", 4: "One Day Mean",  5: "Seven Day Mean",  6: "Five Year Mean"}, errors="raise")
+# cur.execute("SELECT * FROM Gtrend_MEAN WHERE time_period = 'two years' ")
+# df2 = pd.DataFrame(cur.fetchall())
+# df2 
+
+
+
+cur.execute("""
+
+SELECT 
+*
+FROM
+(SELECT * FROM Gtrend_MEAN WHERE time_period = 'one month') as t1
+INNER JOIN
+(SELECT * FROM Gtrend_MEAN WHERE time_period = 'three months') as t2
+ON t1.name = t2.name
+
+
+""")
+
+df2 = pd.DataFrame(cur.fetchall())[[2, 4, 9]]
+
+
+df2 = df2.rename(columns={2: 'Candidate', 4: "Google Trends Mean over 1 Month", 9: "Three Month Mean", }, errors="raise")
+
 
 df2 = df2.set_index('Candidate')
-df2 = df2.iloc[:, 1:]
+# df2 = df2.iloc[:, 1:]
 
 #df.iloc[1] = df.iloc[:,1] * 100
 
+
 combined_df = df.merge(df2, left_on='Candidate', right_on='Candidate')
+combined_df
 
-pageviews_vs_gtrends = combined_df.iloc[:, [0, 1]]
+pageviews_vs_gtrends = combined_df
 corr = pageviews_vs_gtrends.corr(method='pearson')
-print(corr)
+corr.head()
 
-combined_df.iloc[:, [0, 1]].plot(kind="bar", title="Average Google Trend & Website Pageviews Score across Candidatess | Corr {}".format(corr.iloc[0,1]))
+ax = combined_df.iloc[:, [0, 1]].plot(kind="bar", title="\n".join(wrap("Average Google Trend & Website Pageviews Score across Candidates | Corr {}".format(corr.iloc[0,1]))))
+title = ax.set_title("\n".join(wrap("Average Google Trend & Website Pageviews Score across Candidates | Corr {}".format(corr.iloc[0,1]), 60)))
 
-
-
-ax = combined_df.iloc[:, [0, 1]].plot(kind="bar", title="Average Google Trend & Website Pageviews Score across Candidates | Corr {}".format(corr.iloc[0,1]))
 fig = ax.get_figure()
+fig.tight_layout()
+fig.subplots_adjust(top=0.88)
 fig.savefig('avg_gtrend_vs_pageviews.png')
  
+
+
 
 # In[ ]:
 
 
 #cur.execute("SELECT DISTINCT name, avg(percent) FROM DemPrimary WHERE name='Kamala Harris'")
 cur.execute("SELECT name, AVG(percent) FROM DemPrimary GROUP BY name")
-df3 = pd.DataFrame(cur.fetchall())
+df4 = pd.DataFrame(cur.fetchall())
 
-df3 = df3.rename(columns={0: "Candidate", 1: 'Average Polling Percentage'}, errors="raise")
+df4 = df4.rename(columns={0: "Candidate", 1: 'Average Polling Percentage'}, errors="raise")
 
-df3 = df3.set_index("Candidate")
-df3
+df4 = df4.set_index("Candidate")
+df4
 
-combined_df = combined_df.merge(df3, left_on='Candidate', right_on='Candidate')
+combined_df = combined_df.merge(df4, left_on='Candidate', right_on='Candidate')
 combined_df
 
-combined_df.iloc[:, [0, 1, 6]].plot(kind="bar", title="Comparing Average Pageviews, Google Trends, and Polling Statistics across Candidates")
+combined_df.loc[:, ['Google Trends Mean over 1 Month', 'Average Polling Percentage', 'Pageviews Over 1 Month (per 100k)']].plot(kind="bar", title="Comparing Average Pageviews, Google Trends, and Polling Statistics across Candidates")
 
-data = combined_df.iloc[:, [0, 1, 6]]
+data = combined_df.loc[:, ['Google Trends Mean over 1 Month', 'Average Polling Percentage', 'Pageviews Over 1 Month (per 100k)']]
 corr = data.corr(method='pearson')
 print(corr)
 
-ax = combined_df.iloc[:, [0, 1, 6]].plot(kind="bar", title="Comparing Average Pageviews, Google Trends, and Polling Statistics across Candidates")
+# ax = combined_df.loc[:, ['Google Trends Mean over 1 Month', 'Average Polling Percentage', 'Pageviews Over 1 Month (per 100k)']].plot(kind="bar", title="Comparing Average Pageviews, Google Trends, and Polling Statistics across Candidates")
+# fig = ax.get_figure()
+# fig.tight_layout()
+# fig.subplots_adjust(top=0.88) 
+# fig.savefig('avg_gtrend_vs_pageviews_vs_polling_statistics_dems.png')
+
+#ax = combined_df.loc[:, ['Google Trends Mean over 1 Month', 'Average Polling Percentage', 'Pageviews Over 1 Month (per 100k)']].plot(kind="bar", title="Comparing Average Pageviews, Google Trends, and Polling Statistics across Candidates")
+ax = combined_df.loc[:, ['Google Trends Mean over 1 Month', 'Average Polling Percentage', 'Pageviews Over 1 Month (per 100k)']].plot(kind="bar", title="\n".join(wrap("Comparing Average Pageviews, Google Trends, and Polling Statistics across Candidates")))
+title = ax.set_title("\n".join(wrap("Comparing Average Pageviews, Google Trends, and Polling Statistics across Candidates", 60)))
 fig = ax.get_figure()
+fig.tight_layout()
+fig.subplots_adjust(top=0.88)
 fig.savefig('avg_gtrend_vs_pageviews_vs_polling_statistics_dems.png')
 
-# In[ ]:
 
-
-cur.execute("SELECT * FROM DemPrimary")
-cur.fetchall()
 
 
 # In[ ]:
 
 
-cur.execute("SELECT * FROM DemGeneral")
-cur.fetchall()
+
+# In[ ]:
+
 
 
 # In[ ]:
 
 
-cur.execute("SELECT * FROM Gtrend_MEAN")
-results = cur.fetchall()  
+cur.execute("""
 
-df = pd.DataFrame(results)
+SELECT 
+*
+FROM
+(SELECT * FROM Gtrend_MEAN WHERE time_period = 'one month') as t1
+INNER JOIN
+(SELECT * FROM Gtrend_MEAN WHERE time_period = 'three months') as t2
+ON t1.name = t2.name
 
-df = df.set_index(1)
-df = df.iloc[:, 1:]
-df = df.rename(columns={2: "One Month Mean", 3: "Three Month Mean", 4: "One Day Mean",  5: "Seven Day Mean",  6: "Five Year Mean"}, errors="raise")
-df
 
+""")
+
+df2 = pd.DataFrame(cur.fetchall())[[2, 4, 9]]
+
+df2 = df2.rename(columns={2: 'Candidate', 4: "Google Trends Mean over 1 Month", 9: "Three Month Mean", }, errors="raise")
+df2 = df2.set_index('Candidate')
+
+
+# cur.execute("SELECT * FROM Gtrend_MEAN")
+# results = cur.fetchall()  
+
+# df = pd.DataFrame(results)
+
+# df = df.set_index(1)
+# df = df.iloc[:, 1:]
+# df = df.rename(columns={2: "One Month Mean", 3: "Three Month Mean", 4: "One Day Mean",  5: "Seven Day Mean",  6: "Five Year Mean"}, errors="raise")
+# df
+
+df2
 
 # In[ ]:
 
 
 #one month delta
-df.iloc[:, [0,1,3]].plot(kind="bar", title="Average Google Trend Score across Candidates")
-ax = df.iloc[:, [0,1,3]].plot(kind="bar", title="Average Google Trend Score across Candidates")
+df2.plot(kind="bar", title="Average Google Trend Score across Candidates")
+ax = df2.plot(kind="bar", title="Average Google Trend Score across Candidates")
 fig = ax.get_figure()
+fig.tight_layout()
+fig.subplots_adjust(top=0.88)
 fig.savefig('avg_gtrend_all_candidates.png')
 
-df
-
-# In[ ]:
-
-
-
-cur.execute("SELECT * FROM Gtrend_DELTA")
-results = cur.fetchall()  
-
-df = pd.DataFrame(results)
-
-df = df.set_index(1)
-df = df.iloc[:, 1:]
-df = df.rename(columns={2: "One Month Delta", 3: "Three Month Delta", 4: "One Day Delta",  5: "Seven Day Delta",  6: "Five Year Delta"}, errors="raise")
-df
 
 
 # In[ ]:
-df.iloc[:, [0,1,3]].plot(kind="bar", title="Delta in Google Trend Searches across Candidates")
 
+
+cur.execute("""
+
+SELECT 
+*
+FROM
+(SELECT * FROM Gtrend_DELTA WHERE time_period = 'one month') as t1
+INNER JOIN
+(SELECT * FROM Gtrend_DELTA WHERE time_period = 'three months') as t2
+ON t1.name = t2.name
+
+
+""")
+
+df3 = pd.DataFrame(cur.fetchall())[[2, 4, 9]]
+
+df3 = df3.rename(columns={2: 'Candidate', 4: "1 Month Delta", 9: "3 Month Delta", }, errors="raise")
+df3 = df3.set_index('Candidate')
+
+
+
+# In[ ]:
+df3.plot(kind="bar", title="Delta in Google Trend Searches across Candidates")
+ax = df3.plot(kind="bar", title="Delta in Google Trend Searches across Candidates")
+fig = ax.get_figure()
+fig.tight_layout()
+fig.subplots_adjust(top=0.88)
+fig.savefig('delta_gtrend_all_candidates.png')
 
 
 
@@ -207,7 +274,8 @@ combined_df.head()
 # %%
 data2 = combined_df.loc[:, ['Average Polling Percentage', 'Twitter Followers']]
 corr = data2.corr(method='pearson')
-print("Correlation between Twitter Followers & Avg. Polling Perc: ", corr.iloc[1, 0])
+corr
+
 # %%
 ax = combined_df.loc[:, ['Candidate','Average Polling Percentage', 'Twitter Followers']].set_index("Candidate").plot(kind="bar", title="Average Polling Percentages vs Twitter Followers (per million) | Corr: {}".format(corr.iloc[1, 0]))
 fig = ax.get_figure()
@@ -215,5 +283,19 @@ fig.savefig('twitter_vs_polling.png')
 
 
 # %%
+
+#final to csv
+corr = combined_df.iloc[:, [0,1, 2, 3, 6]].corr(method='pearson')
+corr.to_csv(r'correlations.csv')
+
+# %%
+
+
+# %%
+
+
+
+# %%
+
 
 # %%
