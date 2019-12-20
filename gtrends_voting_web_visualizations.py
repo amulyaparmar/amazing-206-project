@@ -22,7 +22,7 @@ def setUpDatabase(db_name):
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
     return cur, conn
-cur, conn = setUpDatabase('CandidateData3.db')
+cur, conn = setUpDatabase('CandidateData.db')
 
 
 # In[ ]:
@@ -240,6 +240,10 @@ fig.savefig('delta_gtrend_all_candidates.png')
 # %%
 
 #BONUS API & CALCULCATION & PRINT OUTPUT
+cur.execute('DROP TABLE IF EXISTS twitter_table')
+
+cur.execute("CREATE TABLE twitter_table (name TEXT, followers REAL)")
+
 
 
 import tweepy
@@ -255,19 +259,22 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
-candidate_df = candidate_df.set_index("Candidate")
+#candidate_df = candidate_df.set_index("Candidate")
 candidate_df['Twitter Followers'] = np.nan
 
 for index, val in candidate_df["Twitter Handle"].iteritems():
     user = api.get_user(val)
     candidate_df['Twitter Followers'][index] = user.followers_count / 1000000
-
+    cur.execute("INSERT INTO twitter_table (name, followers) VALUES (?,?)",(candidate_df["Candidate"][index], user.followers_count / 1000000))
+    #print(candidate_df["Candidate"][index])
+conn.commit()
 
 # %%
 
 combined_df = combined_df.merge(candidate_df, left_on='Candidate', right_on="Candidate")
-combined_df.head()
 
+combined_df = combined_df.set_index("Candidate")
+combined_df.loc[:, ['Average Polling Percentage', 'Twitter Followers']]
 
 # %%
 
@@ -277,8 +284,10 @@ corr = data2.corr(method='pearson')
 corr
 
 # %%
-ax = combined_df.loc[:, ['Candidate','Average Polling Percentage', 'Twitter Followers']].set_index("Candidate").plot(kind="bar", title="Average Polling Percentages vs Twitter Followers (per million) | Corr: {}".format(corr.iloc[1, 0]))
+ax = combined_df.loc[:, ['Average Polling Percentage', 'Twitter Followers']].plot(kind="bar", title="Average Polling Percentages vs Twitter Followers (per million) | Corr: {}".format(corr.iloc[1, 0]))
 fig = ax.get_figure()
+fig.tight_layout()
+fig.subplots_adjust(top=0.88)
 fig.savefig('twitter_vs_polling.png')
 
 
