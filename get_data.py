@@ -413,7 +413,7 @@ def main():
     ]
 
     get_gtrends(candidates)
-    for i in range(100):
+    for i in range(200):
         get_real_clear_politics(candidates)
     get_twitter()
     get_sitetraffic(candidates)
