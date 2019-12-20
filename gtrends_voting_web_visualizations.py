@@ -9,6 +9,7 @@ import os
 import pandas as pd
 import matplotlib as plt
 import urllib.request
+from textwrap import wrap
 
 
 1
@@ -76,12 +77,15 @@ pageviews_vs_gtrends = combined_df.iloc[:, [0, 1]]
 corr = pageviews_vs_gtrends.corr(method='pearson')
 print(corr)
 
-combined_df.iloc[:, [0, 1]].plot(kind="bar", title="Average Google Trend & Website Pageviews Score across Candidatess | Corr {}".format(corr.iloc[0,1]))
+combined_df.iloc[:, [0, 1]].plot(kind="bar", title="Average Google Trend & Website Pageviews Score across Candidates | Corr {}".format(corr.iloc[0,1]))
 
 
 
-ax = combined_df.iloc[:, [0, 1]].plot(kind="bar", title="Average Google Trend & Website Pageviews Score across Candidates | Corr {}".format(corr.iloc[0,1]))
+ax = combined_df.iloc[:, [0, 1]].plot(kind="bar", title="\n".join(wrap("Average Google Trend & Website Pageviews Score across Candidates | Corr {}".format(corr.iloc[0,1]))))
+title = ax.set_title("\n".join(wrap("Average Google Trend & Website Pageviews Score across Candidates | Corr {}".format(corr.iloc[0,1]), 60)))
 fig = ax.get_figure()
+fig.tight_layout()
+fig.subplots_adjust(top=0.88)
 fig.savefig('avg_gtrend_vs_pageviews.png')
  
 
@@ -100,14 +104,16 @@ df3
 combined_df = combined_df.merge(df3, left_on='Candidate', right_on='Candidate')
 combined_df
 
-combined_df.iloc[:, [0, 1, 6]].plot(kind="bar", title="Comparing Average Pageviews, Google Trends, and Polling Statistics across Candidates")
+combined_df.iloc[:, [0, 1, 6]].plot(kind="bar", title="Average Pageviews, Google Trends, and Polling Statistics across Candidates")
 
 data = combined_df.iloc[:, [0, 1, 6]]
 corr = data.corr(method='pearson')
 print(corr)
 
-ax = combined_df.iloc[:, [0, 1, 6]].plot(kind="bar", title="Comparing Average Pageviews, Google Trends, and Polling Statistics across Candidates")
+ax = combined_df.iloc[:, [0, 1, 6]].plot(kind="bar", title="Average Pageviews, Google Trends, and Polling Statistics across Candidates")
 fig = ax.get_figure()
+fig.tight_layout()
+fig.subplots_adjust(top=0.88)
 fig.savefig('avg_gtrend_vs_pageviews_vs_polling_statistics_dems.png')
 
 # In[ ]:
@@ -145,6 +151,7 @@ df
 df.iloc[:, [0,1,3]].plot(kind="bar", title="Average Google Trend Score across Candidates")
 ax = df.iloc[:, [0,1,3]].plot(kind="bar", title="Average Google Trend Score across Candidates")
 fig = ax.get_figure()
+fig.tight_layout()
 fig.savefig('avg_gtrend_all_candidates.png')
 
 df
