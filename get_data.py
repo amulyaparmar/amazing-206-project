@@ -23,6 +23,8 @@ def get_gtrends(candidates):
     cur, conn = setUpDatabase("CandidateData.db")
     candidates_df = pd.DataFrame(candidates)
     candidates_df.columns = ["Candidate", "Website"]
+    cur.execute("CREATE TABLE Gtrend_MEAN (row_number INT PRIMARY KEY, id INT, name TEXT, time_period TEXT, score REAL)")
+    cur.execute("CREATE TABLE Gtrend_DELTA (row_number INT PRIMARY KEY, id INT, name TEXT, time_period TEXT, score REAL)")
 
     #!pip install pytrends
 
@@ -150,7 +152,7 @@ def get_sitetraffic(candidates):
   delta_id = 0
   for candidate in candidates:
     candidate_website = candidate[1]
-    request_url    = "https://endpoint.sitetrafficapi.com/pay-as-you-go/?key=4042b83167e850cb15abd025611917b802556ddd&host={}".format(candidate_website)
+    request_url    = "https://endpoint.sitetrafficapi.com/pay-as-you-go/?key=746a4db232cc1d838ee0f9634011d9062d3a1216&host={}".format(candidate_website)
     data = requests.get(request_url).json()
     print(data)
     print(candidate[0])
@@ -354,7 +356,21 @@ def get_real_clear_politics(candidates):
             poll_count += 1
   conn.commit()   
 
-def get_twitter(candidates):
+def get_twitter():
+    candidates = [
+    
+    ["Andrew Yang", "yang2020.com", "AndrewYang"],
+    ["Kamala Harris", "kamalaharris.org", "KamalaHarris"],
+    ["Bernie Sanders","berniesanders.com", "BernieSanders"],
+    ["Mike Bloomberg", "mikebloomberg.com", "MikeBloomberg"],
+    ["Joe Biden",	"joebiden.com", "JoeBiden"],
+    ["Pete Buttigieg", "peteforamerica.com", "PeteButtigieg"],
+    ["Elizabeth Warren",	"elizabethwarren.com", "ewarren"],
+    ["Tulsi Gabbard", "tulsi2020.com", "TulsiGabbard"],
+    ["Amy Klobucher", "amyklobuchar.com", "amyklobuchar"],
+    ["Tom Steyer", "tomsteyer.com", "TomSteyer"],
+    ["Donald Trump", "donaldjtrump.com","realDonaldTrump"]
+    ]
     cur, conn = setUpDatabase('CandidateData.db')
     cur.execute("CREATE TABLE twitter_table (name TEXT, followers REAL)")
     import tweepy
@@ -383,25 +399,24 @@ def get_twitter(candidates):
 
 def main():
     candidates = [
-    
-    ["Andrew Yang", "yang2020.com", "AndrewYang"],
-    ["Kamala Harris", "kamalaharris.org", "KamalaHarris"],
-    ["Bernie Sanders","berniesanders.com", "BernieSanders"],
-    ["Mike Bloomberg", "mikebloomberg.com", "MikeBloomberg"],
-    ["Joe Biden",	"joebiden.com", "JoeBiden"],
-    ["Pete Buttigieg", "peteforamerica.com", "PeteButtigieg"],
-    ["Elizabeth Warren",	"elizabethwarren.com", "ewarren"],
-    ["Tulsi Gabbard", "tulsi2020.com", "TulsiGabbard"],
-    ["Amy Klobucher", "amyklobuchar.com", "amyklobuchar"],
-    ["Tom Steyer", "tomsteyer.com", "TomSteyer"],
-    ["Donald Trump", "donaldjtrump.com","realDonaldTrump"]
+    ["Andrew Yang", "yang2020.com"],
+    ["Kamala Harris", "kamalaharris.org"],
+    ["Bernie Sanders","berniesanders.com"],
+    ["Mike Bloomberg", "www.mikebloomberg.com"],
+    ["Joe Biden",	"joebiden.com"],
+    ["Pete Buttigieg", "peteforamerica.com"],
+    ["Elizabeth Warren",	"elizabethwarren.com"],
+    ["Tulsi Gabbard", "tulsi2020.com"],
+    ["Amy Klobucher", "amyklobuchar.com"],
+    ["Tom Steyer", "www.tomsteyer.com"],
+    ["Donald Trump", "donaldjtrump.com"]
     ]
 
     get_gtrends(candidates)
-    for i in range(10):
+    for i in range(100):
         get_real_clear_politics(candidates)
+    get_twitter()
     get_sitetraffic(candidates)
-    get_twitter(candidates)
 
 if __name__ == "__main__":
     main()
